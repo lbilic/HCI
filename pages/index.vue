@@ -12,13 +12,13 @@
     <v-layout>
     <v-flex xs12 sm2>
     <v-select
-      :items="coinlist"
+      :items="coinList"
       v-model="e1"
       label="Cryptocurrency"
       class="input-group--focused"
       multiple
       chips
-      item-value="name"
+      item-value="code"
     ></v-select>
     <v-select
       :items="visualization"
@@ -27,14 +27,14 @@
       class="input-group--focused"
       item-value="text"
     ></v-select>
-    <v-btn id="update_btn" @click="showAlert()">
+    <v-btn id="update_btn" @click="update()">
       Update
     </v-btn>
     </v-flex>
     </v-layout>
   </section>
   
-  <line-chart :data="data2" />
+  <line-chart :data="chartData"/>
 
   <section class="container">
     <div hidden>
@@ -66,8 +66,7 @@ import coinlist from '~/components/coinlist.json'
 
 export default {
   components: {
-    AppLogo,
-    coinlist
+    AppLogo
   },
 
   methods: {
@@ -80,20 +79,36 @@ export default {
       }).catch( error => { console.log(error); });
     },
 
-    showAlert() {
-      let API_KEY = "HDVVBK9F8GE4WWH5";
-      let url = "https://min-api.cryptocompare.com/data/histoday?fsym=BTC&tsym=USD&limit=10";
-      axios.get(url).then((response) => {
-        console.log(response.data.results);
-        this.results = response.data.results;
-      }).catch( error => { console.log(error); });
-      var res = this._data.e1;
+    update() {
+      var HttpClient = function () {
+      this.get = function(aUrl, aCallback) {
+        var anHttpRequest = new XMLHttpRequest();
+        anHttpRequest.onreadystatechange = function() { 
+            if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+                aCallback(anHttpRequest.responseText);
+        }
+        anHttpRequest.open( "GET", aUrl, true );            
+        anHttpRequest.send( null );
+        }
+      };
+      var client = new HttpClient();
+      let url = "https://min-api.cryptocompare.com/data/histoday?fsym=";
+      var res = this.e1;
       var i;
-      for (i = 0; i < this._data.e1.length; i++) {
-        alert(this._data.e1);
-        var blah = {name: 'Workout', data: {'2017-01-01 00:00:00 -0800': 3, '2017-01-02 00:00:00 -0800': 4}};
-        this._data.chartData.push({name: 'Workout', data: {'2017-01-01 00:00:00 -0800': 3, '2017-01-02 00:00:00 -0800': 4}});
-      }
+      var temp = [];
+      console.log(res);
+      res.forEach((resEl, i) => { client.get(url + this._data.e1[i] + "&tsym=USD&limit=10", function(response){
+        var symbol = resEl;
+        var retVal = JSON.parse(response);
+        var j;
+          var retValPushed = {name: symbol, data: {}}
+          for (j = 0; j < retVal.Data.length; j++) {
+            var timeF = retVal.Data[j].time;
+            retValPushed.data[timeF] = retVal.Data[j].high;
+          }
+          temp.push(retValPushed);})
+      });
+      this.chartData = temp;
     }
   },
 
@@ -110,30 +125,21 @@ export default {
   },
 
   data() {
-    console.log("prvo");
-    console.log(this);
-    console.log("drugo");
-
     return {
-      coinlist,
       e1: null,
       e2: null,
       e3: null,
       e4: null,
       visualization: ['Graph', 'Table'],
-      items: [
-        { text: 'Chuck Norris', power: Infinity },
-        { text: 'Bruce Lee', power: 9000 },
-        { text: 'Jackie Chan', power: 7000 },
-        { text: 'Jet Li', power: 8000 }
-      ],
-      data2: [  
-        {name: 'Workout', data: {'2017-01-01 00:00:00 -0800': 3, '2017-01-02 00:00:00 -0800': 4}},
-        {name: 'Call parents', data: {'2017-01-01 00:00:00 -0800': 5, '2017-01-02 00:00:00 -0800': 3}}
-      ],
       chartData: []
     };
   },
+
+  computed: {
+    coinList: function () {
+      return coinlist;
+    }
+  }
 }
 
 </script>
