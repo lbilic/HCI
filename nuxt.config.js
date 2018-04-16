@@ -2,6 +2,7 @@ module.exports = {
   /*
   ** Headers of the page
   */
+
   head: {
     title: 'hci',
     meta: [
@@ -13,6 +14,20 @@ module.exports = {
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
     ]
   },
+
+  plugins: ['~plugins/vuetify.js'],
+
+  css: [
+    {
+    src: '~/assets/css/app.styl',
+    lang: 'styl'
+    }
+  ],
+
+  node: {
+    fs: "empty"
+  },
+  
   /*
   ** Customize the progress bar color
   */
@@ -24,13 +39,22 @@ module.exports = {
     /*
     ** Run ESLint on save
     */
+    vendor: ['vuetify'],
+    extractCSS: true,
     extend (config, { isDev, isClient }) {
       if (isDev && isClient) {
         config.module.rules.push({
           enforce: 'pre',
           test: /\.(js|vue)$/,
           loader: 'eslint-loader',
-          exclude: /(node_modules)/
+          exclude: /(node_modules)/,
+          test: /\.csv$/,
+        loader: 'csv-loader',
+        options: {
+          dynamicTyping: true,
+          header: true,
+          skipEmptyLines: true
+        }
         })
       }
     }
